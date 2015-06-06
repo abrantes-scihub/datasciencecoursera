@@ -22,6 +22,6 @@ dev.off()
 
 # Reproduce the image (within a different frame):
 library(png)
-img1 <- readPNG("./plot1.png")
+img1 <- readPNG("./plot2.png")
 plot(c(0, 500), c(0, 500), type = "n", xlab = "", ylab = "")
 rasterImage(img1, 0, 0, 480, 480)
