@@ -1,0 +1,264 @@
+---
+title: "PML Course Project Writeup"
+author: "ds1800"
+date: "21 de junio de 2015"
+output: html_document
+---
+# Weight Lifting Exercises Dataset
+
+For this project it is good to have a clear picture of the problem configuration, and the following is taken from the original authors, at: 
+ http://groupware.les.inf.puc-rio.br/har
+
+
+![alt text](/Users/diegojosesaa/sensorsWLE.png)
+
+
+The goal of this project is to predict the manner in which the subjects did the exercise. This is the "classe" variable in the training set. 
+This seems to be a recognition task of inherently sequential actions. Somehow the whole exercise must be taken into account, since instant "photographs" of the exercise do not reflect that it is being performed incorrectly. 
+Therefore, my intention in this project was to identify each whole repetition of the exercise via the use of *discrete wavelet transform* (which I had to learn along the way). There are R-packages which are capable of performing such DWT. I selected the package *wavethresh*, for wavelet statistics and transforms, that worked very well.
+
+First, a clean-up of the 160-variables dataset was performed, by suppressing all non-sensor variables. This still left us with 53 variables.
+
+In order to pick a whole repetition of the exercise, whole *windows* were extracted from the raw dataset and subjected to wavelet transform. This left us with 406 windows in the training set. From this transform operation, each window is represented as an integer power of 2 coefficients (I selected 128 coefficients). Only a fraction of these coefficients were used for training with random forests since, potentially,  each of the 53 variables is multiplied by 128, giving us a total of 6784 variables, which is kind of exaggerate.
+
+The best accuracy that I was able to obtain in this project with random forests was about 60%, with the use of 10-fold crossvalidation (method = "repeatedcv") with 10 repeats. It was obtained by using just 19 of the 128 DWT coefficients from each series. The parameter mtry was varied from 1 to 11, but the best accuracy, according to *caret*, was obtained when it had the value 8.
+
+Other methods tried in this project, among others, were: *naive Bayes* (package "klaR"), *ctrees* (package "party") and *lvq* (package "class"). Unfortunately they obtained meager accuracies, between 24% and 26%. As a matter of fact random forests also began with these accuracies but were improved by a more proper selection of parameters, such as the number of trees, repeats, observations and parameter mtry being considered. 
+
+The stripped code used for this project is below:
+
+
+```{r, eval = FALSE}
+# Script for Course Project on Practical Machine Learning
+# See also associated (more details) script "pml_courseProject.R"
+library(data.table)
+library(caret)
+library(lattice)
+library(ggplot2)
+library(sqldf)
+library(dplyr)
+library(wavethresh)
+# Download the training and testing data
+trainUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv" 
+download.file(url = trainUrl, destfile="~/data/courseProject_pml/pml-train.csv", method="curl") 
+
+testUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+download.file(url = testUrl, destfile="~/data/courseProject_pml/pml-testing.csv", method="curl") 
+
+trainData <- read.csv("~/data/courseProject_pml/pml-train.csv", stringsAsFactors = FALSE)
+
+#-1 -Let us compute the row.end and class of each time series
+row.end <- sqldf('select X, classe from trainData where new_window = "yes" ')
+View(row.end)
+
+dif <- seq(1:length(row.end[, 1]))
+
+difs <- function(x){
+  len <- length(x[, 1])
+  dif <- seq(1:len)
+  dif[1] <- x[1, 1]
+  for(i in seq(1:(len-1))){
+    dif[i+1] <- x[i+1, 1]-x[i, 1]
+  }
+  return(dif)
+}
+
+dif <- difs(row.end)
+plot(dif)
+abline(h = 128)
+
+library(ggplot2)
+qplot(dif, color = row.end$classe)
+
+# 
+# =================================================================
+#-2 -Suppress zero features
+features <- names(trainData)
+
+# Suppress the statistical features, "skewness", "kurtosis",
+# max, min and amplitude_yaw for belt, dumbbell and forearm, 
+# since they are mostly zero, contain errors or can be recomputed  
+delete <- function(var){
+  c(ind, grep(var, features))
+}
+
+ind <- grep("skewness", features)
+ind <- delete("kurtosis")
+ind <- delete("^max")
+ind <- delete("^min")
+ind <- delete("^amplitude")
+ind <- delete("^avg")
+ind <- delete("^var")
+ind <- delete("^stddev")
+
+ind <- data.frame(ind)
+# ind.all <- data.frame(seq(1:159)+1)  # suppress the first column (X)
+ind.all <- data.frame(seq(1:160)) 
+names(ind.all) <- "ind"
+
+library(dplyr)
+ind1 <- sort(anti_join(x=ind.all, y=ind, by="ind")$ind )
+
+dat <- trainData[, ind1]
+#  dat <- dat[, c(3,7:59)]
+dat <- dat[, c(1,8:60)]
+
+# Recompute the features
+features <- names(dat)
+
+# ===========================================================
+
+#  Extend series
+#-3 Replicate the data as many "ntimes" as needed to complete
+#  then apply wavelet transform 
+library(wavethresh)
+library(data.table)  # only for "setnames"
+# series of 128 points
+len <- 128
+
+# First observation
+row1 <- 1
+data <- NULL
+for(j in 1:nrow(row.end)) {  # For each observation
+   dd <- dat[row1:row.end[j, 1], ]
+   ntimes <- ceiling(len/nrow(dd))
+   ddd <- (dd[rep(1:nrow(dd), times = ntimes),])[1:len, ]
+   row1 <- row.end[j, 1]+1  # For the next observation
+   serie <- ddd[, 2:53]  # Only numeric columns
+   wtData <- NULL
+   for(i in 1:ncol(serie)) {  # For each column
+     a <- serie[, i]
+     wt <- wd(a, filter.number=4, family="DaubExPhase")
+     coefs <- head(rev(wt$D), 19)  # Number of coefficients used
+     wtData <- cbind(wtData, t(coefs))
+   }
+
+   data <- rbind(data, wtData)
+}
+data <- data.matrix(data)
+
+# ==============================================================
+#-4 Data splitting
+#
+library(caret)
+
+inTrain <- createDataPartition(y = row.end$classe,
+                               p = 0.75, list = FALSE)
+training <- data[inTrain, ]
+testing <- data[-inTrain, ]
+dim(training)
+
+
+# Put the "classe" in the last column:
+library(data.table)
+
+classe <- data.frame(row.end[inTrain, 2], stringsAsFactors = TRUE)
+training <- data.frame(cbind(training, classe))
+setnames(training, old = "row.end.inTrain..2.", new = "classe")
+
+classe <- data.frame(row.end[-inTrain, 2], stringsAsFactors = TRUE)
+testing <- data.frame(cbind(testing, classe))
+setnames(testing, old = "row.end..inTrain..2.", new = "classe")
+
+# ======================================================
+# ======================================================
+# AND THE WINNER IS:
+# Random forests with numerical data for training:
+# It was used 90% of the data as training data
+# Taking 19 variables from DWT 
+set.seed(825)
+library(randomForest)
+library(caret)
+#  With 90% of obs. for training (and the rest for testing)
+#  train Control. Use 10-fold cross-validation
+#  ctrl <- trainControl(method="repeatedcv", repeats=10)
+ctrl <- trainControl(method="repeatedcv", number=10, repeats=10)
+my.grid <- expand.grid(mtry = c(1, 2, 3, 4, 5, 6, 7, 8, 9))
+# apply random forest
+system.time(modelFit <- train(classe ~ ., 
+                              data = training,
+                              metric = "Kappa",
+                              ntree = 1000,
+                              method = "rf",
+                              trControl = ctrl,
+                              tuneGrid = my.grid) )
+
+```
+
+The previous run took about five hours, as reported by the system:
+
+user    system   elapsed 
+15533.530    31.911 15560.081 
+
+With the following code we get a plot of the model:
+
+```{r, eval=FALSE}
+trellis.par.set(caretTheme())
+plot(modelFit)
+```
+
+![alt text](/Users/diegojosesaa/plot90.png)
+
+* The description of the model is obtained with:
+```{r, eval=FALSE}
+modelFit 
+```
+which gives:
+
+Random Forest 
+
+369 samples
+988 predictors
+5 classes: 'A', 'B', 'C', 'D', 'E' 
+
+No pre-processing
+Resampling: Cross-Validated (10 fold, repeated 10 times) 
+
+Summary of sample sizes: 333, 332, 333, 333, 332, 331, ... 
+
+Resampling results across tuning parameters:
+```{r table1, echo=FALSE, message=FALSE, warnings=FALSE, results='modelFit'}
+tabl <- "
+  mtry|  Accuracy |  Kappa    |  Accuracy SD|  Kappa SD  
+ 1    | 0.5414256 | 0.4028175 | 0.06271932  | 0.08217147
+ 2    | 0.5628239 | 0.4335031 | 0.06803588  | 0.08941182
+ 3    | 0.5733944 | 0.4492648 | 0.07157297  | 0.09296342
+ 4    | 0.5838868 | 0.4639761 | 0.07502620  | 0.09758817
+ 5    | 0.5877293 | 0.4695300 | 0.06611636  | 0.08518392
+ 6    | 0.5890361 | 0.4714454 | 0.07449561  | 0.09680688
+ 7    | 0.5994121 | 0.4854880 | 0.07750854  | 0.10042348
+ 8    | 0.6027316 | 0.4907483 | 0.07299149  | 0.09358759
+ 9    | 0.5903323 | 0.4746593 | 0.07931920  | 0.10216658
+"
+cat(tabl)
+```  
+
+ 
+Kappa was used to select the optimal model using  the largest value.
+The final value used for the model was mtry = 8.
+
+* Finally, a cross-tabulation of the real and predicted values is obtained with the code:
+
+```{r, eval=FALSE}
+test.predict <- predict(modelFit, newdata = testing)
+table(test.predict, testing$classe)
+```
+
+which produces:
+
+
+```{r table2, echo=FALSE, message=FALSE, warnings=FALSE, results='crosstab'}
+tabl <- "
+test.predict A B C D E |
+           A 7 0 2 2 0 |
+           B 1 7 2 1 1 |
+           C 0 0 2 1 0 |
+           D 1 0 0 1 0 |
+           E 1 0 1 1 6 |
+"
+cat(tabl)
+``` 
+
+
+
+* THE END
