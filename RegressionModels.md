@@ -62,7 +62,7 @@ References
 
 2. Francis Smart, [ A Shiny App for Playing with OLS](http://www.econometricsbysimulation.com/2013/11/a-shiny-app-for-playing-with-ols.html)
 
-3. The shiny application can be found in: [Regression Models in shiny](http://ds1800.shinyapps.io/RegrModelsApp)
+3. The shiny application can be found in: [Regression Models in shiny](https://ds1800.shinyapps.io/courseProject_DDP)
 
-4. Code and presentation in: [Code and presentation](http://rpubs.com/ds1800/112243)
+4. Code and presentation at: [Code and presentation](https://github.com/ds1800/datasciencecoursera)
 

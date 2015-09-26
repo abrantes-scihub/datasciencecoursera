@@ -43,5 +43,6 @@ summary(lm(mpg ~ wt + sqrt(wt), data=mtcars))
 
 3. The shiny application can be found in: [Regression Models in shiny](http://ds1800.shinyapps.io/RegrModelsApp)
 
-4. Presentation in: [Presentation](http://rpubs.com/ds1800/112241)
+4. Code and presentation at: [Code and presentation](https://github.com/ds1800/datasciencecoursera)
 
+5. Presentation at: [http://Rpubs.com/ds1800/RegressionModels]
