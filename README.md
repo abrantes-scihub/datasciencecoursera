@@ -30,9 +30,11 @@ summary(lm(mpg ~ sqrt(wt), data=mtcars))
 
 2. Francis Smart, [ A Shiny App for Playing with OLS](http://www.econometricsbysimulation.com/2013/11/a-shiny-app-for-playing-with-ols.html)
 
-3. The shiny application can be found in: [Regression Models in shiny](http://regrmodels.shinyio/)
+3. The shiny application can be found in: [Regression Models in shiny](http://ds1800.shinyapps.io/RegrModelsApp)
 
-4. Code and presentation in: [Code and presentation](http://rpubs/regression models)
+4. Code and presentation at: [Code and presentation](https://github.com/ds1800/datasciencecoursera)
+
+5. Presentation at: [Rpubs](http://Rpubs.com/ds1800/RegressionModels)
 
 **This repository contains:**
 - The present README.md file,
