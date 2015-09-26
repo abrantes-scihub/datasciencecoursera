@@ -34,7 +34,7 @@ summary(lm(mpg ~ sqrt(wt), data=mtcars))
 
 4. Code and presentation at: [Code and presentation](https://github.com/ds1800/datasciencecoursera)
 
-5. Presentation at: [Rpubs](http://Rpubs.com/ds1800/RegressionModels)
+5. Presentation at: [Rpubs](http://rpubs.com/ds1800/112287)
 
 **This repository contains:**
 - The present README.md file,
