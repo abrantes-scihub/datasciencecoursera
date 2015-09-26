@@ -1,3 +1,6 @@
+---
+output: pdf_document
+---
 # DEVELOPING DATA PRODUCTS
 # COURSE PROJECT - REGRESSION MODELS IN SHINY
 # Introduction
@@ -13,7 +16,7 @@
 **A simple example of a linear regression model**, computed in R, is
 
 ```{r eval=TRUE, echo=TRUE}
-summary(lm(mpg ~ sqrt(wt), data=mtcars))
+summary(lm(mpg ~ wt + sqrt(wt), data=mtcars))
 ```
 
 **This shiny application allows to**
@@ -23,6 +26,14 @@ summary(lm(mpg ~ sqrt(wt), data=mtcars))
 3. Choose one of the regressors
 4. Define one of the several predefined linear models
 5. Define some characteristics of the resulting plot.
+6. Compute the linear regression model.
+
+**This repository contains:**
+
+- The present README.md file,
+- The RegressionModels.Rpres file,  
+- The respective RegressionModels.md file,
+- The server.R and ui.R files for the application
 
 **References**
 
@@ -30,13 +41,7 @@ summary(lm(mpg ~ sqrt(wt), data=mtcars))
 
 2. Francis Smart, [ A Shiny App for Playing with OLS](http://www.econometricsbysimulation.com/2013/11/a-shiny-app-for-playing-with-ols.html)
 
-3. The shiny application can be found in: [Regression Models in shiny](http://regrmodels.shinyio/)
+3. The shiny application can be found in: [Regression Models in shiny](http://ds1800.shinyapps.io/RegrModelsApp)
 
-4. Code and presentation in: [Code and presentation](http://rpubs/regression models)
-
-**This repository contains:**
-- The present README.md file,
-- The RegressionModels.Rpres file,  
-- The respective RegressionModels.md file,
-- The server.R and ui.R files for the application
+4. Presentation in: [Presentation](http://rpubs.com/ds1800/112241)
 

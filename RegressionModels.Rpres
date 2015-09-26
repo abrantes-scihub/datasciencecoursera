@@ -1,6 +1,10 @@
-# DEVELOPING DATA PRODUCTS
-# COURSE PROJECT - REGRESSION MODELS IN SHINY
-# Introduction
+Regression Models in Shiny
+========================================================
+author: ds1800
+date: 2015/09/25
+
+Regression models
+========================================================
 
 **Regression models**  are very important in data science for being:
 
@@ -9,34 +13,33 @@
 - Produce highly interpretable model fits
 - Simple, parsimonious and interpretable
 
+A linear regression model
+========================================================
 
-**A simple example of a linear regression model**, computed in R, is
+An example of a linear model, computed in R is
 
 ```{r eval=TRUE, echo=TRUE}
-summary(lm(mpg ~ sqrt(wt), data=mtcars))
+summary(lm(mpg ~ wt + sqrt(wt), data=mtcars))
 ```
 
-**This shiny application allows to**
+This shiny application allows
+========================================================
 
 1. Select the database to be used.
 2. Pick the resulting variable of the regression.
 3. Choose one of the regressors
 4. Define one of the several predefined linear models
 5. Define some characteristics of the resulting plot.
+6. Compute the linear regression model.
 
-**References**
+References
+===
 
 1. Brian Caffo, [ Regression Models for Data Science in R](https://leanpub.com/regmods)
 
 2. Francis Smart, [ A Shiny App for Playing with OLS](http://www.econometricsbysimulation.com/2013/11/a-shiny-app-for-playing-with-ols.html)
 
-3. The shiny application can be found in: [Regression Models in shiny](http://regrmodels.shinyio/)
+3. The shiny application can be found in: [Regression Models in shiny](http://ds1800.shinyapps.io/RegrModelsApp)
 
-4. Code and presentation in: [Code and presentation](http://rpubs/regression models)
-
-**This repository contains:**
-- The present README.md file,
-- The RegressionModels.Rpres file,  
-- The respective RegressionModels.md file,
-- The server.R and ui.R files for the application
+4. Code and presentation in: [Code and presentation](http://rpubs.com/ds1800/112243)
 
